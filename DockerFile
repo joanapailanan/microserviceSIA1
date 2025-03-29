@@ -1,31 +1,20 @@
-# Use an official PHP runtime as a base image
-FROM php:8.1-fpm
+# Use PHP with Apache
+FROM php:8.1-apache
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Install required PHP extensions
-RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    zip \
-    unzip \
-    git \
-    curl \
-    && docker-php-ext-install pdo pdo_mysql
+# Enable Apache Rewrite Module
+RUN a2enmod rewrite
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Install required extensions
+RUN docker-php-ext-install pdo pdo_mysql
 
-# Copy application files
+# Copy app files
 COPY . .
-
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader
 
 # Expose port 80
 EXPOSE 80
 
-# Start PHP built-in server (since there's no Nginx/Apache on Vercel)
-CMD ["php", "-S", "0.0.0.0:80"]
+# Start Apache
+CMD ["apache2-foreground"]
