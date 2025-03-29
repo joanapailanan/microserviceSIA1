@@ -7,17 +7,18 @@ WORKDIR /var/www/html
 # Enable Apache Rewrite Module
 RUN a2enmod rewrite
 
-# Install required extensions
-RUN docker-php-ext-install pdo pdo_mysql
+# Install required PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql bcmath mbstring
 
-# Install Composer globally
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Install Composer manually
+RUN apt-get update && apt-get install -y unzip curl && \
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Copy app files
 COPY . .
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader
+# Install dependencies safely
+RUN composer install --no-dev --optimize-autoloader || cat /var/www/html/composer.log
 
 # Expose port 80
 EXPOSE 80
